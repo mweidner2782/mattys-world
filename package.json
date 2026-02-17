@@ -1,0 +1,9 @@
+{
+  "name": "mattys-world",
+  "version": "1.0.0",
+  "description": "Mattys World — Your personal information organizer",
+  "scripts": {
+    "start": "npx serve public",
+    "dev": "npx serve public"
+  }
+}

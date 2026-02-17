@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mattys World</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Georgia','Times New Roman',serif;background:#FAF8F5;color:#2C2416}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#E8E2DA;border-radius:3px}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef,useMemo}=React;
+
+/* ─── Helpers ─── */
+const uid=()=>Math.random().toString(36).slice(2,10);
+const now=()=>new Date().toISOString();
+const fmt=iso=>{if(!iso)return"";return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})};
+const fmtFull=iso=>{if(!iso)return"";const d=new Date(iso);return d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})};
+const toKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const sameDay=(a,b)=>toKey(a)===toKey(b);
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MO=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+/* ─── Palette ─── */
+const P={
+  bg:"#FAF8F5",sf:"#FFFFFF",sfH:"#F5F2EE",bd:"#E8E2DA",bdL:"#F0EBE4",
+  tx:"#2C2416",txM:"#8C7E6A",txL:"#B5A994",
+  ac:"#D4722A",acH:"#BE6524",acL:"#FFF3EB",acB:"#F5D4B8",
+  gn:"#5A8A5E",gnL:"#EDF5EE",rd:"#C4513A",rdL:"#FDF0ED",
+  sb:"#2C2416",sbT:"#D4C9B8",sbA:"#E8C496",sbH:"#3D3425"
+};
+
+const EC=[
+  {id:"orange",hex:"#D4722A",bg:"#FFF3EB",bd:"#F5D4B8"},
+  {id:"blue",hex:"#3B7DD8",bg:"#EBF3FF",bd:"#B8D4F5"},
+  {id:"green",hex:"#5A8A5E",bg:"#EDF5EE",bd:"#B8D9BB"},
+  {id:"purple",hex:"#7C5CBF",bg:"#F3EEFF",bd:"#CDB8F5"},
+  {id:"red",hex:"#C4513A",bg:"#FDF0ED",bd:"#F0C9C0"},
+  {id:"teal",hex:"#2A9D8F",bg:"#E8F8F5",bd:"#A8DDD5"}
+];
+const REM=[{v:"none",l:"No reminder"},{v:"15",l:"15 min before"},{v:"60",l:"1 hour before"},{v:"1440",l:"1 day before"}];
+const REC=[{v:"none",l:"Does not repeat"},{v:"daily",l:"Daily"},{v:"weekly",l:"Weekly"},{v:"monthly",l:"Monthly"}];
+
+/* ─── SVG Icons ─── */
+const Ic=({d,s=18,c="currentColor"})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+const II={
+  plus:c=><Ic d="M12 5v14M5 12h14" c={c}/>,
+  check:c=><Ic d="M20 6L9 17l-5-5" c={c}/>,
+  trash:c=><Ic d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" c={c}/>,
+  edit:c=><Ic d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" c={c}/>,
+  bell:c=><Ic d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" c={c}/>,
+  page:c=><Ic d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" c={c}/>,
+  logout:c=><Ic d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" c={c}/>,
+  share:c=><Ic d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" c={c}/>,
+  clip:c=><Ic d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" c={c}/>,
+  search:c=><Ic d="M11 3a8 8 0 100 16 8 8 0 000-16zM21 21l-4.35-4.35" c={c}/>,
+  cal:c=><Ic d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18" c={c}/>,
+  repeat:c=><Ic d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" c={c}/>,
+  link:c=><Ic d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" c={c}/>,
+  clock:c=><Ic d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 6v6l4 2" c={c}/>,
+  x:c=><Ic d="M18 6L6 18M6 6l12 12" c={c}/>,
+  chevL:c=><Ic d="M15 18l-6-6 6-6" c={c}/>,
+  chevR:c=><Ic d="M9 18l6-6-6-6" c={c}/>,
+  chevD:c=><Ic d="M6 9l6 6 6-6" c={c}/>,
+  file:c=><Ic d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6" c={c}/>
+};
+
+/* ─── Buttons ─── */
+function IBtn({children,onClick,style:st}){
+  const[h,setH]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+    style={{background:h?P.sfH:"none",border:"none",cursor:"pointer",padding:4,borderRadius:4,display:"flex",alignItems:"center",transition:"background .15s",...st}}>{children}</button>;
+}
+function SBtn({children,onClick,muted,style:st}){
+  const[h,setH]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+    style={{padding:"6px 14px",borderRadius:6,border:"none",cursor:"pointer",fontSize:13,fontWeight:600,transition:"all .15s",
+    background:muted?(h?P.bd:P.sfH):(h?P.acH:P.ac),color:muted?P.txM:"#fff",...st}}>{children}</button>;
+}
+function ABtn({icon,label,onClick}){
+  const[h,setH]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+    style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:h?P.acL:"transparent",
+    border:`1px solid ${h?P.acB:P.bd}`,borderRadius:6,cursor:"pointer",fontSize:13,color:h?P.ac:P.txM,transition:"all .15s"}}>{icon} {label}</button>;
+}
+
+/* ─── Inputs ─── */
+function Inp({label,value,onChange,placeholder,type,onKeyDown,autoFocus}){
+  return <div style={{marginBottom:14}}>
+    {label&&<label style={{display:"block",fontSize:11,fontWeight:700,color:P.txM,marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"}}>{label}</label>}
+    <input type={type||"text"} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus} onKeyDown={onKeyDown}
+      style={{width:"100%",padding:"9px 12px",border:`1px solid ${P.bd}`,borderRadius:7,fontSize:14,color:P.tx,background:P.bg,outline:"none",boxSizing:"border-box"}}/>
+  </div>;
+}
+function Sel({label,value,onChange,options}){
+  return <div style={{marginBottom:14}}>
+    {label&&<label style={{display:"block",fontSize:11,fontWeight:700,color:P.txM,marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"}}>{label}</label>}
+    <select value={value} onChange={e=>onChange(e.target.value)}
+      style={{width:"100%",padding:"9px 12px",border:`1px solid ${P.bd}`,borderRadius:7,fontSize:13,color:P.tx,background:P.bg,outline:"none",boxSizing:"border-box",cursor:"pointer"}}>
+      {options.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  </div>;
+}
+
+/* ─── Default Data ─── */
+const td=new Date();
+const DEF_PAGES=[{id:"home",title:"My Home Page",
+  notes:[{id:uid(),content:"Welcome to Mattys World! Your personal information organizer. Add notes, to-dos, files, and reminders to any page. Click Calendar in the sidebar to manage your events.",created:now()}],
+  todos:[{id:uid(),text:"Create a new page",done:false,created:now()},{id:uid(),text:"Try the calendar",done:false,created:now()},{id:uid(),text:"Add a to-do item",done:true,created:now()}],
+  files:[],reminders:[],shared:false,shareId:uid(),created:now(),updated:now()}];
+
+const DEF_EVS=[
+  {id:uid(),title:"Welcome to Mattys World!",date:toKey(td),time:"10:00",notes:"Explore your new organizer",color:"orange",reminder:"60",recurrence:"none",linkedPageId:"home"},
+  {id:uid(),title:"Set up your pages",date:toKey(new Date(td.getFullYear(),td.getMonth(),td.getDate()+1)),time:"14:00",notes:"",color:"blue",reminder:"none",recurrence:"none",linkedPageId:null},
+  {id:uid(),title:"Weekly review",date:toKey(new Date(td.getFullYear(),td.getMonth(),td.getDate()+3)),time:"09:00",notes:"Review all pages and to-dos",color:"green",reminder:"1440",recurrence:"weekly",linkedPageId:null}
+];
+
+/* ─── Calendar Helpers ─── */
+function getMonthDays(y,m){
+  const days=[],sd=new Date(y,m,1).getDay(),pl=new Date(y,m,0).getDate();
+  for(let i=sd-1;i>=0;i--)days.push({day:pl-i,cur:false,date:new Date(y,m-1,pl-i)});
+  const ld=new Date(y,m+1,0).getDate();
+  for(let i=1;i<=ld;i++)days.push({day:i,cur:true,date:new Date(y,m,i)});
+  const r=42-days.length;for(let i=1;i<=r;i++)days.push({day:i,cur:false,date:new Date(y,m+1,i)});
+  return days;
+}
+function getEvs(events,dk){
+  const r=[];
+  for(const ev of events){
+    if(ev.date===dk){r.push(ev);continue;}
+    if(ev.recurrence!=="none"){
+      const ed=new Date(ev.date+"T00:00:00"),tgt=new Date(dk+"T00:00:00");
+      if(tgt<=ed)continue;
+      if(ev.recurrence==="daily")r.push({...ev,_rec:true});
+      else if(ev.recurrence==="weekly"&&ed.getDay()===tgt.getDay())r.push({...ev,_rec:true});
+      else if(ev.recurrence==="monthly"&&ed.getDate()===tgt.getDate())r.push({...ev,_rec:true});
+    }
+  }
+  return r.sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+}
+
+/* ─── Notification Hook ─── */
+function useNotifs(events){
+  const[n,setN]=useState(null);const shown=useRef(new Set());
+  useEffect(()=>{
+    const iv=setInterval(()=>{const ms=Date.now();for(const ev of events){if(ev.reminder==="none")continue;
+      const et=new Date(`${ev.date}T${ev.time||"00:00"}`).getTime(),rm=parseInt(ev.reminder)*60000,tt=et-rm,k=`${ev.id}-${ev.date}`;
+      if(ms>=tt&&ms<tt+60000&&!shown.current.has(k)){shown.current.add(k);
+        setN({title:ev.title,msg:`Reminder: ${REM.find(o=>o.v===ev.reminder)?.l}`,color:ev.color});
+        setTimeout(()=>setN(null),5000);}}},15000);
+    return()=>clearInterval(iv);
+  },[events]);return n;
+}
+
+/* ─── Notification Banner ─── */
+function NotifBanner({n}){
+  if(!n)return null;const c=EC.find(e=>e.id===n.color)||EC[0];
+  return <div style={{position:"fixed",top:20,right:20,zIndex:2000,background:P.sf,border:`1px solid ${c.bd}`,borderLeft:`4px solid ${c.hex}`,borderRadius:10,padding:"14px 20px",boxShadow:"0 8px 32px rgba(44,36,22,.15)",maxWidth:340,animation:"slideIn .3s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>{II.bell(c.hex)}<span style={{fontSize:14,fontWeight:600,color:P.tx}}>{n.title}</span></div>
+    <div style={{fontSize:12,color:P.txM,paddingLeft:23}}>{n.msg}</div>
+  </div>;
+}
+
+/* ─── Modal Backdrop ─── */
+function Modal({children,onClose}){
+  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(44,36,22,.4)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",animation:"fadeIn .15s ease"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:P.sf,borderRadius:14,padding:"28px 32px",boxShadow:"0 16px 48px rgba(44,36,22,.15)",maxHeight:"90vh",overflowY:"auto"}}>{children}</div>
+  </div>;
+}
+
+/* ─── Event Modal ─── */
+function EventModal({event,onClose,onSave,onDelete,pages}){
+  const[title,setTitle]=useState(event?.title||"");
+  const[date,setDate]=useState(event?.date||toKey(new Date()));
+  const[time,setTime]=useState(event?.time||"09:00");
+  const[notes,setNotes]=useState(event?.notes||"");
+  const[color,setColor]=useState(event?.color||"orange");
+  const[reminder,setReminder]=useState(event?.reminder||"none");
+  const[recurrence,setRecurrence]=useState(event?.recurrence||"none");
+  const[lp,setLp]=useState(event?.linkedPageId||"");
+  const isE=!!event?.id;
+  const save=()=>{if(!title.trim())return;onSave({id:event?.id||uid(),title:title.trim(),date,time,notes:notes.trim(),color,reminder,recurrence,linkedPageId:lp||null});onClose();};
+
+  return <Modal onClose={onClose}><div style={{width:440}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
+      <h3 style={{fontSize:18,color:P.tx}}>{isE?"Edit Event":"New Event"}</h3>
+      <IBtn onClick={onClose}>{II.x(P.txM)}</IBtn>
+    </div>
+    <Inp label="Event Title" value={title} onChange={setTitle} placeholder="What's happening?" autoFocus/>
+    <div style={{marginBottom:14}}>
+      <label style={{display:"block",fontSize:11,fontWeight:700,color:P.txM,marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Color</label>
+      <div style={{display:"flex",gap:8}}>{EC.map(c=>
+        <div key={c.id} onClick={()=>setColor(c.id)} style={{width:28,height:28,borderRadius:14,background:c.hex,cursor:"pointer",border:color===c.id?`3px solid ${P.tx}`:"3px solid transparent",boxSizing:"border-box",transition:"border .15s"}}/>
+      )}</div>
+    </div>
+    <div style={{display:"flex",gap:12}}>
+      <div style={{flex:1}}><Inp label="Date" type="date" value={date} onChange={setDate}/></div>
+      <div style={{flex:1}}><Inp label="Time" type="time" value={time} onChange={setTime}/></div>
+    </div>
+    <Sel label="Reminder" value={reminder} onChange={setReminder} options={REM}/>
+    <Sel label="Repeat" value={recurrence} onChange={setRecurrence} options={REC}/>
+    <Sel label="Link to Page" value={lp} onChange={setLp} options={[{v:"",l:"None"},...pages.map(p=>({v:p.id,l:p.title}))]}/>
+    <div style={{marginBottom:18}}>
+      <label style={{display:"block",fontSize:11,fontWeight:700,color:P.txM,marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"}}>Notes</label>
+      <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Add notes..."
+        style={{width:"100%",minHeight:70,padding:"9px 12px",border:`1px solid ${P.bd}`,borderRadius:7,fontSize:13,color:P.tx,resize:"vertical",outline:"none",boxSizing:"border-box",background:P.bg}}/>
+    </div>
+    <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+      {isE&&<SBtn muted onClick={()=>{onDelete(event.id);onClose();}} style={{color:P.rd,marginRight:"auto"}}>Delete</SBtn>}
+      <SBtn muted onClick={onClose}>Cancel</SBtn>
+      <SBtn onClick={save}>{isE?"Save":"Add Event"}</SBtn>
+    </div>
+  </div></Modal>;
+}
+
+/* ─── Day Detail ─── */
+function DayDetail({dateKey,events,onAdd,onEdit,pages,goPage}){
+  const d=new Date(dateKey+"T12:00:00");
+  const evs=getEvs(events,dateKey);
+  return <div style={{background:P.sf,border:`1px solid ${P.bd}`,borderRadius:10,padding:"18px 20px",marginTop:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <h3 style={{fontSize:16,color:P.tx}}>{d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</h3>
+      <SBtn onClick={()=>onAdd(dateKey)}><span style={{display:"flex",alignItems:"center",gap:4}}>{II.plus()}&nbsp;Event</span></SBtn>
+    </div>
+    {evs.length===0?<div style={{fontSize:13,color:P.txL,fontStyle:"italic",padding:"12px 0"}}>No events this day.</div>:
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>{evs.map((ev,i)=>{
+      const c=EC.find(e=>e.id===ev.color)||EC[0];
+      const linked=ev.linkedPageId?pages.find(p=>p.id===ev.linkedPageId):null;
+      return <div key={ev.id+"-"+i} onClick={()=>onEdit(ev)} style={{padding:"12px 14px",borderRadius:8,cursor:"pointer",background:c.bg,border:`1px solid ${c.bd}`,borderLeft:`4px solid ${c.hex}`,transition:"box-shadow .15s"}}
+        onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.06)"}
+        onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>
+        <div style={{fontSize:14,fontWeight:600,color:P.tx,marginBottom:3}}>
+          {ev.title}{ev._rec&&<span style={{marginLeft:6}}>{II.repeat(c.hex)}</span>}
+        </div>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
+          {ev.time&&<span style={{fontSize:12,color:P.txM,display:"flex",alignItems:"center",gap:3}}>{II.clock(P.txM)}&nbsp;{ev.time}</span>}
+          {ev.reminder!=="none"&&<span style={{fontSize:12,color:c.hex,display:"flex",alignItems:"center",gap:3}}>{II.bell(c.hex)}&nbsp;{REM.find(o=>o.v===ev.reminder)?.l}</span>}
+          {ev.recurrence!=="none"&&<span style={{fontSize:12,color:P.txM,display:"flex",alignItems:"center",gap:3}}>{II.repeat(P.txM)}&nbsp;{REC.find(o=>o.v===ev.recurrence)?.l}</span>}
+        </div>
+        {ev.notes&&<div style={{fontSize:13,color:P.txM,marginTop:6,lineHeight:1.5}}>{ev.notes}</div>}
+        {linked&&<div onClick={e=>{e.stopPropagation();goPage(linked.id);}} style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:4,fontSize:12,color:c.hex,fontWeight:600,cursor:"pointer",padding:"3px 8px",background:"rgba(255,255,255,.6)",borderRadius:4}}>{II.link(c.hex)}&nbsp;{linked.title}</div>}
+      </div>;
+    })}</div>}
+  </div>;
+}
+
+/* ─── Calendar ─── */
+function CalendarView({events,setEvents,pages,goPage}){
+  const[vd,setVd]=useState(new Date());
+  const[sel,setSel]=useState(toKey(new Date()));
+  const[em,setEm]=useState(null);
+  const y=vd.getFullYear(),m=vd.getMonth();
+  const days=useMemo(()=>getMonthDays(y,m),[y,m]);
+
+  return <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+    <div style={{padding:"20px 36px 16px",borderBottom:`1px solid ${P.bd}`,background:P.sf,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>{II.cal(P.ac)}<h1 style={{fontSize:26,fontWeight:"bold",color:P.tx}}>Calendar</h1></div>
+      <SBtn onClick={()=>setEm({date:sel})}><span style={{display:"flex",alignItems:"center",gap:5}}>{II.plus()}&nbsp;New Event</span></SBtn>
+    </div>
+    <div style={{flex:1,overflowY:"auto",padding:"24px 36px"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <IBtn onClick={()=>setVd(new Date(y,m-1,1))}>{II.chevL(P.txM)}</IBtn>
+          <h2 style={{fontSize:20,color:P.tx,minWidth:200,textAlign:"center"}}>{MO[m]} {y}</h2>
+          <IBtn onClick={()=>setVd(new Date(y,m+1,1))}>{II.chevR(P.txM)}</IBtn>
+        </div>
+        <SBtn muted onClick={()=>{setVd(new Date());setSel(toKey(new Date()));}}>Today</SBtn>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:1}}>
+        {DAYS.map(d=><div key={d} style={{textAlign:"center",padding:"8px 0",fontSize:11,fontWeight:700,color:P.txM,textTransform:"uppercase",letterSpacing:".5px"}}>{d}</div>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:1,background:P.bd,border:`1px solid ${P.bd}`,borderRadius:10,overflow:"hidden"}}>
+        {days.map((d,i)=>{
+          const dk=toKey(d.date),isT=sameDay(d.date,new Date()),isS=dk===sel,de=getEvs(events,dk);
+          return <div key={i} onClick={()=>setSel(dk)} style={{background:isS?P.acL:d.cur?P.sf:P.sfH,minHeight:88,padding:"6px 8px",cursor:"pointer",transition:"background .15s"}}>
+            <div style={{fontSize:13,fontWeight:isT?800:500,color:!d.cur?P.txL:isT?"#fff":P.tx,marginBottom:4,display:"flex",alignItems:"center",justifyContent:"center",width:isT?26:"auto",height:isT?26:"auto",borderRadius:13,background:isT?P.ac:"transparent"}}>{d.day}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:2}}>
+              {de.slice(0,3).map((ev,j)=>{const c=EC.find(e=>e.id===ev.color)||EC[0];
+                return <div key={ev.id+"-"+j} style={{fontSize:10,lineHeight:1.3,padding:"2px 4px",borderRadius:3,background:c.hex,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:600}}>
+                  {ev.time&&<span style={{opacity:.8}}>{ev.time} </span>}{ev.title}
+                </div>})}
+              {de.length>3&&<div style={{fontSize:10,color:P.txM,fontWeight:600,paddingLeft:4}}>+{de.length-3} more</div>}
+            </div>
+          </div>;
+        })}
+      </div>
+      <DayDetail dateKey={sel} events={events} pages={pages} onAdd={dk=>setEm({date:dk})} onEdit={ev=>setEm({event:ev})} goPage={goPage}/>
+    </div>
+    {em&&<EventModal event={em.event||{date:em.date}} onClose={()=>setEm(null)} pages={pages}
+      onSave={ev=>setEvents(p=>{const i=p.findIndex(e=>e.id===ev.id);if(i>=0){const n=[...p];n[i]=ev;return n;}return[...p,ev];})}
+      onDelete={id=>setEvents(p=>p.filter(e=>e.id!==id))}/>}
+  </div>;
+}
+
+/* ─── Collapsible Section ─── */
+function Sec({title,icon,children}){
+  const[o,setO]=useState(true);
+  return <div style={{marginBottom:28}}>
+    <div onClick={()=>setO(!o)} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:12,userSelect:"none"}}>
+      <span style={{color:P.txM,transform:o?"rotate(0)":"rotate(-90deg)",display:"flex",transition:"transform .2s"}}>{II.chevD(P.txM)}</span>
+      <span style={{color:P.txM}}>{icon}</span>
+      <span style={{fontSize:12,fontWeight:700,color:P.txM,textTransform:"uppercase",letterSpacing:"1px"}}>{title}</span>
+    </div>
+    {o&&<div style={{paddingLeft:4}}>{children}</div>}
+  </div>;
+}
+
+/* ─── Note ─── */
+function NoteItem({note,onDel,onEdit}){
+  const[ed,setEd]=useState(false);const[t,setT]=useState(note.content);const[h,setH]=useState(false);
+  return <div style={{padding:"14px 16px",background:P.sf,border:`1px solid ${P.bdL}`,borderRadius:8,marginBottom:8,position:"relative"}}
+    onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}>
+    {ed?<div>
+      <textarea value={t} onChange={e=>setT(e.target.value)} style={{width:"100%",minHeight:80,padding:8,border:`1px solid ${P.bd}`,borderRadius:6,fontSize:14,color:P.tx,resize:"vertical",outline:"none",boxSizing:"border-box",background:P.bg}}/>
+      <div style={{display:"flex",gap:8,marginTop:8}}><SBtn onClick={()=>{onEdit(t);setEd(false);}}>Save</SBtn><SBtn muted onClick={()=>{setT(note.content);setEd(false);}}>Cancel</SBtn></div>
+    </div>:<div style={{fontSize:14,lineHeight:1.65,color:P.tx,whiteSpace:"pre-wrap"}}>{note.content}</div>}
+    {!ed&&h&&<div style={{position:"absolute",top:10,right:10,display:"flex",gap:4}}>
+      <IBtn onClick={()=>setEd(true)}>{II.edit(P.txM)}</IBtn><IBtn onClick={onDel}>{II.trash(P.rd)}</IBtn>
+    </div>}
+    <div style={{fontSize:11,color:P.txL,marginTop:8}}>{fmt(note.created)}</div>
+  </div>;
+}
+
+/* ─── Todo ─── */
+function TodoItem({todo,onToggle,onDel,onEdit}){
+  const[ed,setEd]=useState(false);const[t,setT]=useState(todo.text);const[h,setH]=useState(false);
+  return <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 12px",borderRadius:6,marginBottom:4,background:todo.done?P.gnL:"transparent"}}
+    onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}>
+    <div onClick={onToggle} style={{width:20,height:20,borderRadius:5,border:`2px solid ${todo.done?P.gn:P.bd}`,background:todo.done?P.gn:"transparent",cursor:"pointer",flexShrink:0,marginTop:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {todo.done&&II.check("#fff")}
+    </div>
+    {ed?<div style={{flex:1}}><input value={t} onChange={e=>setT(e.target.value)} autoFocus onKeyDown={e=>{if(e.key==="Enter"){onEdit(t);setEd(false);}}}
+      style={{width:"100%",padding:"4px 8px",border:`1px solid ${P.bd}`,borderRadius:4,fontSize:14,color:P.tx,outline:"none",boxSizing:"border-box"}}/></div>
+    :<span style={{fontSize:14,color:todo.done?P.txM:P.tx,textDecoration:todo.done?"line-through":"none",lineHeight:1.5,flex:1}}>{todo.text}</span>}
+    {!ed&&h&&<div style={{display:"flex",gap:4,flexShrink:0}}><IBtn onClick={()=>setEd(true)}>{II.edit(P.txM)}</IBtn><IBtn onClick={onDel}>{II.trash(P.rd)}</IBtn></div>}
+  </div>;
+}
+
+/* ─── File ─── */
+function FileItem({file,onDel}){
+  return <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:P.sf,border:`1px solid ${P.bdL}`,borderRadius:8,marginBottom:6}}>
+    {II.file(P.ac)}<div style={{flex:1}}><div style={{fontSize:14,color:P.tx,fontWeight:500}}>{file.name}</div><div style={{fontSize:11,color:P.txL}}>{file.size} · {fmt(file.created)}</div></div>
+    <IBtn onClick={onDel}>{II.trash(P.rd)}</IBtn>
+  </div>;
+}
+
+/* ─── Reminder ─── */
+function RemItem({rem,onDel}){
+  const past=new Date(rem.datetime)<new Date();
+  return <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:past?P.sfH:P.acL,border:`1px solid ${past?P.bd:P.acB}`,borderRadius:8,marginBottom:6,opacity:past?.6:1}}>
+    {II.bell(past?P.txM:P.ac)}<div style={{flex:1}}><div style={{fontSize:14,color:P.tx}}>{rem.text}</div><div style={{fontSize:12,color:past?P.txL:P.ac,fontWeight:500}}>{fmtFull(rem.datetime)}{past&&" (past)"}</div></div>
+    <IBtn onClick={onDel}>{II.trash(P.rd)}</IBtn>
+  </div>;
+}
+
+/* ─── Page Content ─── */
+function PageContent({page,up}){
+  return <div>
+    {page.notes.length>0&&<Sec title="Notes" icon={II.edit(P.txM)}>{page.notes.map((n,i)=>
+      <NoteItem key={n.id} note={n} onDel={()=>up({...page,notes:page.notes.filter(x=>x.id!==n.id),updated:now()})}
+        onEdit={c=>{const ns=[...page.notes];ns[i]={...n,content:c};up({...page,notes:ns,updated:now()});}}/>
+    )}</Sec>}
+    {page.todos.length>0&&<Sec title="To-Do List" icon={II.check(P.txM)}>{page.todos.map((t,i)=>
+      <TodoItem key={t.id} todo={t}
+        onToggle={()=>{const ts=[...page.todos];ts[i]={...t,done:!t.done};up({...page,todos:ts,updated:now()});}}
+        onDel={()=>up({...page,todos:page.todos.filter(x=>x.id!==t.id),updated:now()})}
+        onEdit={tx=>{const ts=[...page.todos];ts[i]={...t,text:tx};up({...page,todos:ts,updated:now()});}}/>
+    )}</Sec>}
+    {page.files?.length>0&&<Sec title="Files" icon={II.clip(P.txM)}>{page.files.map(f=>
+      <FileItem key={f.id} file={f} onDel={()=>up({...page,files:page.files.filter(x=>x.id!==f.id),updated:now()})}/>
+    )}</Sec>}
+    {page.reminders?.length>0&&<Sec title="Reminders" icon={II.bell(P.txM)}>{page.reminders.map(r=>
+      <RemItem key={r.id} rem={r} onDel={()=>up({...page,reminders:page.reminders.filter(x=>x.id!==r.id),updated:now()})}/>
+    )}</Sec>}
+  </div>;
+}
+
+/* ─── Add Modal ─── */
+function AddModal({type,onClose,onAdd}){
+  const[t,setT]=useState("");const[dt,setDt]=useState("");const fr=useRef(null);
+  const titles={note:"Add Note",todo:"Add To-Do",file:"Attach File",reminder:"Set Reminder"};
+  const add=()=>{
+    if(type==="note"&&t.trim())onAdd({id:uid(),content:t.trim(),created:now()});
+    else if(type==="todo"&&t.trim())onAdd({id:uid(),text:t.trim(),done:false,created:now()});
+    else if(type==="reminder"&&t.trim()&&dt)onAdd({id:uid(),text:t.trim(),datetime:dt,created:now()});
+    onClose();
+  };
+  return <Modal onClose={onClose}><div style={{width:400}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+      <h3 style={{fontSize:18,color:P.tx}}>{titles[type]}</h3><IBtn onClick={onClose}>{II.x(P.txM)}</IBtn>
+    </div>
+    {type==="file"?<div>
+      <div onClick={()=>fr.current?.click()} style={{padding:"32px 24px",border:`2px dashed ${P.bd}`,borderRadius:10,textAlign:"center",cursor:"pointer",background:P.bg}}>
+        {II.clip(P.ac)}<div style={{fontSize:14,color:P.txM,marginTop:8}}>Click to choose a file</div>
+      </div>
+      <input ref={fr} type="file" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f){const s=f.size<1024?`${f.size} B`:f.size<1048576?`${(f.size/1024).toFixed(1)} KB`:`${(f.size/1048576).toFixed(1)} MB`;onAdd({id:uid(),name:f.name,size:s,created:now()});onClose();}}}/>
+    </div>:<div>
+      {type==="note"?<textarea value={t} onChange={e=>setT(e.target.value)} placeholder="Write your note..." autoFocus style={{width:"100%",minHeight:120,padding:"10px 14px",border:`1px solid ${P.bd}`,borderRadius:8,fontSize:14,color:P.tx,resize:"vertical",outline:"none",boxSizing:"border-box",background:P.bg}}/>
+      :<input value={t} onChange={e=>setT(e.target.value)} autoFocus placeholder={type==="todo"?"What needs to be done?":"Reminder description..."} onKeyDown={e=>e.key==="Enter"&&type==="todo"&&add()} style={{width:"100%",padding:"10px 14px",border:`1px solid ${P.bd}`,borderRadius:8,fontSize:14,color:P.tx,outline:"none",boxSizing:"border-box",background:P.bg}}/>}
+      {type==="reminder"&&<div style={{marginTop:12}}><Inp label="Date & Time" type="datetime-local" value={dt} onChange={setDt}/></div>}
+      <div style={{display:"flex",gap:8,marginTop:16,justifyContent:"flex-end"}}><SBtn muted onClick={onClose}>Cancel</SBtn><SBtn onClick={add}>Add</SBtn></div>
+    </div>}
+  </div></Modal>;
+}
+
+/* ─── Share Modal ─── */
+function ShareModal({page,onClose,onToggle}){
+  const[cp,setCp]=useState(false);const url=window.location.origin+"/?share="+page.shareId;
+  return <Modal onClose={onClose}><div style={{width:440}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+      <h3 style={{fontSize:18,color:P.tx}}>Share Page</h3><IBtn onClick={onClose}>{II.x(P.txM)}</IBtn>
+    </div>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+      <span style={{fontSize:14,color:P.tx}}>Public sharing</span>
+      <div onClick={onToggle} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:page.shared?P.gn:P.bd,padding:2,transition:"background .2s"}}>
+        <div style={{width:20,height:20,borderRadius:10,background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,.15)",transition:"transform .2s",transform:page.shared?"translateX(20px)":"translateX(0)"}}/>
+      </div>
+      <span style={{fontSize:13,color:page.shared?P.gn:P.txL,fontWeight:500}}>{page.shared?"On":"Off"}</span>
+    </div>
+    {page.shared&&<div>
+      <label style={{display:"block",fontSize:11,fontWeight:700,color:P.txM,marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"}}>Share Link</label>
+      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        <div style={{flex:1,padding:"10px 14px",background:P.bg,border:`1px solid ${P.bd}`,borderRadius:8,fontSize:12,color:P.tx,fontFamily:"'Courier New',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{url}</div>
+        <SBtn onClick={()=>{navigator.clipboard?.writeText(url);setCp(true);setTimeout(()=>setCp(false),2000);}}>{cp?"Copied!":"Copy"}</SBtn>
+      </div>
+    </div>}
+  </div></Modal>;
+}
+
+/* ─── Auth Screen ─── */
+function AuthScreen({onLogin}){
+  const[su,setSu]=useState(false);const[em,setEm]=useState("");const[pw,setPw]=useState("");const[nm,setNm]=useState("");const[er,setEr]=useState("");
+  const go=()=>{if(!em||!pw)return setEr("Please fill in all fields.");if(su&&!nm)return setEr("Please enter your name.");if(!em.includes("@"))return setEr("Valid email required.");if(pw.length<4)return setEr("Password: 4+ chars.");setEr("");onLogin({email:em,name:nm||em.split("@")[0]});};
+  return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${P.bg} 0%,#EDE8E0 100%)`}}>
+    <div style={{width:420,background:P.sf,borderRadius:16,boxShadow:"0 8px 40px rgba(44,36,22,.1)",padding:"48px 40px",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:P.ac}}/>
+      <div style={{textAlign:"center",marginBottom:36}}>
+        <div style={{fontSize:32,fontWeight:"bold",color:P.tx,letterSpacing:"-.5px",marginBottom:4}}>Mattys World</div>
+        <div style={{fontSize:14,color:P.txM,fontStyle:"italic"}}>Your personal information organizer</div>
+      </div>
+      <div style={{display:"flex",marginBottom:28,borderRadius:8,overflow:"hidden",border:`1px solid ${P.bd}`}}>
+        {["Sign In","Sign Up"].map((l,i)=><button key={l} onClick={()=>{setSu(i===1);setEr("");}}
+          style={{flex:1,padding:"10px 0",border:"none",cursor:"pointer",fontSize:14,fontWeight:600,background:(i===0?!su:su)?P.ac:P.sf,color:(i===0?!su:su)?"#fff":P.txM}}>{l}</button>)}
+      </div>
+      {su&&<Inp label="Name" value={nm} onChange={setNm} placeholder="Your name"/>}
+      <Inp label="Email" value={em} onChange={setEm} placeholder="you@example.com" type="email"/>
+      <Inp label="Password" value={pw} onChange={setPw} placeholder="••••••••" type="password" onKeyDown={e=>e.key==="Enter"&&go()}/>
+      {er&&<div style={{padding:"10px 14px",background:P.rdL,color:P.rd,borderRadius:8,fontSize:13,marginBottom:16,border:"1px solid #F0C9C0"}}>{er}</div>}
+      <button onClick={go} style={{width:"100%",padding:"12px 0",background:P.ac,color:"#fff",border:"none",borderRadius:8,fontSize:16,fontWeight:600,cursor:"pointer",marginTop:4}}>{su?"Create Account":"Sign In"}</button>
+    </div>
+  </div>;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ─── MAIN APP ─── */
+/* ═══════════════════════════════════════════════════════════ */
+function App(){
+  const[user,setUser]=useState(null);
+  const[pages,setPages]=useState(DEF_PAGES);
+  const[events,setEvents]=useState(DEF_EVS);
+  const[view,setView]=useState("pages");
+  const[apId,setApId]=useState("home");
+  const[modal,setModal]=useState(null);
+  const[sm,setSm]=useState(false);
+  const[search,setSearch]=useState("");
+  const[eTitle,setETitle]=useState(false);
+  const[tText,setTText]=useState("");
+  const[npi,setNpi]=useState(false);
+  const[npt,setNpt]=useState("");
+
+  const notif=useNotifs(events);
+  const ap=pages.find(p=>p.id===apId);
+  const fp=pages.filter(p=>p.title.toLowerCase().includes(search.toLowerCase()));
+  const up=useCallback(pg=>setPages(ps=>ps.map(p=>p.id===pg.id?pg:p)),[]);
+
+  const addPg=()=>{if(!npt.trim())return;const pg={id:uid(),title:npt.trim(),notes:[],todos:[],files:[],reminders:[],shared:false,shareId:uid(),created:now(),updated:now()};setPages(ps=>[...ps,pg]);setApId(pg.id);setView("pages");setNpi(false);setNpt("");};
+  const delPg=id=>{if(pages.length<=1)return;setPages(ps=>ps.filter(p=>p.id!==id));if(apId===id)setApId(pages.find(p=>p.id!==id)?.id);};
+  const handleAdd=item=>{if(!ap||!modal)return;const k=modal.type==="note"?"notes":modal.type==="todo"?"todos":modal.type==="file"?"files":"reminders";up({...ap,[k]:[...ap[k],item],updated:now()});};
+  const goPage=id=>{setApId(id);setView("pages");};
+
+  if(!user)return <AuthScreen onLogin={setUser}/>;
+
+  return <div style={{display:"flex",minHeight:"100vh",background:P.bg}}>
+    <NotifBanner n={notif}/>
+
+    {/* ─── SIDEBAR ─── */}
+    <div style={{width:260,background:P.sb,color:P.sbT,display:"flex",flexDirection:"column",flexShrink:0}}>
+      <div style={{padding:"24px 20px 16px"}}>
+        <div style={{fontSize:20,fontWeight:"bold",color:"#fff",letterSpacing:"-.3px"}}>Mattys World</div>
+        <div style={{fontSize:12,color:P.sbT,opacity:.6,marginTop:2}}>{user.name}'s space</div>
+      </div>
+
+      {/* Nav tabs */}
+      <div style={{padding:"0 12px 8px",display:"flex",gap:4}}>
+        {[{id:"pages",icon:II.page,l:"Pages"},{id:"calendar",icon:II.cal,l:"Calendar"}].map(tab=>
+          <button key={tab.id} onClick={()=>setView(tab.id)} style={{flex:1,padding:"8px 0",borderRadius:6,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:view===tab.id?P.sbH:"transparent",color:view===tab.id?"#fff":P.sbT,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+            {tab.icon(view===tab.id?P.sbA:P.sbT)} {tab.l}
+          </button>
+        )}
+      </div>
+
+      {view==="pages"&&<>
+        <div style={{padding:"0 16px 12px"}}><div style={{position:"relative"}}>
+          <span style={{position:"absolute",left:10,top:8}}>{II.search(P.sbT)}</span>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search pages..." style={{width:"100%",padding:"8px 10px 8px 32px",background:P.sbH,border:"1px solid transparent",borderRadius:6,fontSize:13,color:"#fff",outline:"none",boxSizing:"border-box"}}/>
+        </div></div>
+        <div style={{flex:1,overflowY:"auto",padding:"0 8px"}}>
+          {fp.map(p=><div key={p.id} onClick={()=>{setApId(p.id);setView("pages");}}
+            style={{padding:"9px 12px",borderRadius:6,cursor:"pointer",marginBottom:2,display:"flex",alignItems:"center",gap:8,background:(p.id===apId&&view==="pages")?P.sbH:"transparent"}}>
+            {II.page((p.id===apId&&view==="pages")?P.sbA:P.sbT)}
+            <span style={{fontSize:14,color:(p.id===apId&&view==="pages")?"#fff":P.sbT,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.title}</span>
+            {p.shared&&<span style={{fontSize:10,color:P.sbA,opacity:.7}}>●</span>}
+          </div>)}
+        </div>
+        <div style={{padding:"12px 16px",borderTop:`1px solid ${P.sbH}`}}>
+          {npi?<div style={{display:"flex",gap:6}}>
+            <input value={npt} onChange={e=>setNpt(e.target.value)} placeholder="Page title..." autoFocus onKeyDown={e=>{if(e.key==="Enter")addPg();if(e.key==="Escape")setNpi(false);}}
+              style={{flex:1,padding:"7px 10px",background:P.sbH,border:"1px solid rgba(255,255,255,.1)",borderRadius:6,fontSize:13,color:"#fff",outline:"none"}}/>
+            <SBtn onClick={addPg} style={{fontSize:12}}>Add</SBtn>
+          </div>
+          :<button onClick={()=>setNpi(true)} style={{width:"100%",padding:"9px 12px",background:"transparent",border:`1px dashed rgba(255,255,255,.15)`,borderRadius:6,color:P.sbT,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>
+            {II.plus(P.sbT)} New Page
+          </button>}
+        </div>
+      </>}
+
+      {view==="calendar"&&<div style={{flex:1,padding:"8px 16px",overflowY:"auto"}}>
+        <div style={{fontSize:12,color:P.sbT,opacity:.6,marginBottom:12,textTransform:"uppercase",letterSpacing:".5px",fontWeight:700}}>Upcoming</div>
+        {events.filter(e=>new Date(e.date+"T"+(e.time||"00:00"))>=new Date()).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8).map(ev=>{
+          const c=EC.find(e=>e.id===ev.color)||EC[0];
+          return <div key={ev.id} style={{padding:"8px 10px",borderRadius:6,marginBottom:4,background:P.sbH,borderLeft:`3px solid ${c.hex}`}}>
+            <div style={{fontSize:13,color:"#fff",fontWeight:500}}>{ev.title}</div>
+            <div style={{fontSize:11,color:P.sbT,opacity:.7}}>{fmt(ev.date+"T00:00:00")}{ev.time&&` · ${ev.time}`}</div>
+          </div>;
+        })}
+      </div>}
+
+      <div style={{padding:"14px 16px",borderTop:`1px solid ${P.sbH}`,display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:30,height:30,borderRadius:15,background:P.ac,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff"}}>{user.name?.[0]?.toUpperCase()}</div>
+        <div style={{flex:1}}><div style={{fontSize:13,color:"#fff",fontWeight:500}}>{user.name}</div><div style={{fontSize:11,color:P.sbT,opacity:.6}}>{user.email}</div></div>
+        <IBtn onClick={()=>setUser(null)} style={{opacity:.5}}>{II.logout(P.sbT)}</IBtn>
+      </div>
+    </div>
+
+    {/* ─── MAIN ─── */}
+    {view==="calendar"?<CalendarView events={events} setEvents={setEvents} pages={pages} goPage={goPage}/>:
+    <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+      {ap?<>
+        {/* Header */}
+        <div style={{padding:"20px 36px 16px",borderBottom:`1px solid ${P.bd}`,background:P.sf,display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
+          <div style={{flex:1}}>
+            {eTitle?<input value={tText} onChange={e=>setTText(e.target.value)} autoFocus
+              onBlur={()=>{if(tText.trim())up({...ap,title:tText.trim(),updated:now()});setETitle(false);}}
+              onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setETitle(false);}}
+              style={{fontSize:26,fontWeight:"bold",color:P.tx,border:"none",borderBottom:`2px solid ${P.ac}`,outline:"none",background:"transparent",width:"100%",padding:"0 0 4px"}}/>
+            :<h1 onClick={()=>{setETitle(true);setTText(ap.title);}} style={{fontSize:26,fontWeight:"bold",color:P.tx,cursor:"pointer"}} title="Click to edit">{ap.title}</h1>}
+            <div style={{fontSize:12,color:P.txL,marginTop:4}}>Created {fmt(ap.created)} · Updated {fmt(ap.updated)}</div>
+          </div>
+          <div style={{display:"flex",gap:6,marginLeft:16,flexShrink:0}}>
+            <SBtn onClick={()=>setSm(true)} muted><span style={{display:"flex",alignItems:"center",gap:5}}>{II.share(P.txM)} Share</span></SBtn>
+            {pages.length>1&&<SBtn onClick={()=>delPg(ap.id)} muted style={{color:P.rd}}><span style={{display:"flex",alignItems:"center",gap:5}}>{II.trash(P.rd)} Delete</span></SBtn>}
+          </div>
+        </div>
+
+        {/* Action bar */}
+        <div style={{padding:"12px 36px",background:P.sf,borderBottom:`1px solid ${P.bdL}`,display:"flex",gap:8}}>
+          <ABtn icon={II.edit(P.txM)} label="Note" onClick={()=>setModal({type:"note"})}/>
+          <ABtn icon={II.check(P.txM)} label="To-Do" onClick={()=>setModal({type:"todo"})}/>
+          <ABtn icon={II.clip(P.txM)} label="File" onClick={()=>setModal({type:"file"})}/>
+          <ABtn icon={II.bell(P.txM)} label="Reminder" onClick={()=>setModal({type:"reminder"})}/>
+        </div>
+
+        {/* Content */}
+        <div style={{flex:1,overflowY:"auto",padding:"28px 36px"}}>
+          {ap.notes.length===0&&ap.todos.length===0&&(ap.files||[]).length===0&&(ap.reminders||[]).length===0
+            ?<div style={{textAlign:"center",padding:"64px 24px",color:P.txL}}>
+              <div style={{fontSize:48,marginBottom:16,opacity:.3}}>📋</div>
+              <div style={{fontSize:16,fontStyle:"italic",marginBottom:8}}>This page is empty</div>
+              <div style={{fontSize:13}}>Add notes, to-dos, files, or reminders above.</div>
+            </div>
+            :<PageContent page={ap} up={up}/>}
+        </div>
+      </>:<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:P.txL}}>Select a page.</div>}
+    </div>}
+
+    {modal&&<AddModal type={modal.type} onClose={()=>setModal(null)} onAdd={handleAdd}/>}
+    {sm&&ap&&<ShareModal page={ap} onClose={()=>setSm(false)} onToggle={()=>up({...ap,shared:!ap.shared,updated:now()})}/>}
+  </div>;
+}
+
+ReactDOM.render(<App/>,document.getElementById("root"));
+</script>
+</body>
+</html>
