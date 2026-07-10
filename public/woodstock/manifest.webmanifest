@@ -1,0 +1,41 @@
+{
+  "id": "/woodstock/",
+  "name": "Woodstock Home",
+  "short_name": "Woodstock",
+  "description": "House systems, contacts, maintenance and reminders for 2626 Glasco Turnpike.",
+  "start_url": "/woodstock/?source=installed-app",
+  "scope": "/woodstock/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f6f1e8",
+  "theme_color": "#24362c",
+  "categories": ["household", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/woodstock/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/woodstock/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Who to call",
+      "short_name": "Call",
+      "url": "/woodstock/#call"
+    },
+    {
+      "name": "Maintenance tasks",
+      "short_name": "Tasks",
+      "url": "/woodstock/#maintenance"
+    }
+  ],
+  "prefer_related_applications": false
+}
