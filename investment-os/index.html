@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Investment OS</title>
+  <meta name="description" content="A private investing command center for technology, longevity, healthcare, space and emerging markets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">MW</span><div><b>Investment OS</b><small>Private Capital Command Center</small></div></div>
+      <nav id="nav">
+        <button class="nav-item active" data-view="overview">Overview</button>
+        <button class="nav-item" data-view="dealflow">Deal Flow</button>
+        <button class="nav-item" data-view="ideas">Idea Vault</button>
+        <button class="nav-item" data-view="markets">Markets</button>
+        <button class="nav-item" data-view="news">Live News</button>
+        <button class="nav-item" data-view="xfeeds">X Feeds</button>
+        <button class="nav-item" data-view="calendar">Catalysts</button>
+        <button class="nav-item" data-view="network">Network</button>
+      </nav>
+      <div class="side-card">
+        <span class="eyebrow">Core themes</span>
+        <div class="tag-row">
+          <span>AI</span><span>Longevity</span><span>Health</span><span>Space</span>
+        </div>
+      </div>
+      <div class="side-foot">Data entered here is stored locally in this browser.</div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel"></p>
+          <h1 id="viewTitle">Investment Command Center</h1>
+        </div>
+        <div class="top-actions">
+          <button class="ghost" id="exportBtn">Export data</button>
+          <button class="primary" id="newDealBtn">+ Add opportunity</button>
+        </div>
+      </header>
+
+      <section class="view active" id="overview">
+        <div class="hero-grid">
+          <article class="hero-card">
+            <div>
+              <p class="eyebrow">Today’s focus</p>
+              <h2>Find asymmetric opportunities before they become obvious.</h2>
+              <p>Review fresh signals, score new companies, and move the strongest ideas into diligence.</p>
+            </div>
+            <div class="hero-score">
+              <span>Pipeline score</span>
+              <strong id="pipelineScore">74</strong>
+              <small>Healthy</small>
+            </div>
+          </article>
+          <article class="brief-card">
+            <div class="card-title"><h3>Daily operating rhythm</h3><span>20–30 min</span></div>
+            <ol class="rhythm">
+              <li>Scan news and X signals</li>
+              <li>Review new deals and catalysts</li>
+              <li>Promote one idea into diligence</li>
+              <li>Record one founder or investor outreach</li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat"><span>Active deals</span><strong id="activeDeals">0</strong><small>in pipeline</small></article>
+          <article class="stat"><span>High-conviction ideas</span><strong id="highIdeas">0</strong><small>score ≥ 80</small></article>
+          <article class="stat"><span>Upcoming catalysts</span><strong id="catalystCount">6</strong><small>next 90 days</small></article>
+          <article class="stat"><span>Dry powder target</span><strong>$500K</strong><small>customize later</small></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel span-2">
+            <div class="card-title"><div><span class="eyebrow">Pipeline</span><h3>Top opportunities</h3></div><button class="text-btn" data-jump="dealflow">View all</button></div>
+            <div id="topDeals" class="table-wrap"></div>
+          </article>
+          <article class="panel">
+            <div class="card-title"><div><span class="eyebrow">Signals</span><h3>What to watch</h3></div></div>
+            <div class="signal-list">
+              <a href="https://news.google.com/search?q=AI%20startup%20funding" target="_blank"><b>AI funding velocity</b><span>New rounds, valuations and strategic investors</span></a>
+              <a href="https://clinicaltrials.gov/search?cond=Aging" target="_blank"><b>Longevity readouts</b><span>Trials approaching primary completion</span></a>
+              <a href="https://www.fda.gov/news-events/fda-newsroom/press-announcements" target="_blank"><b>FDA activity</b><span>Approvals, designations and safety updates</span></a>
+              <a href="https://www.sbir.gov/awards" target="_blank"><b>Government grants</b><span>Early validation for frontier technology</span></a>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="card-title"><div><span class="eyebrow">Allocation framework</span><h3>Private capital guardrails</h3></div></div>
+            <div class="allocation">
+              <div><span>Direct startups</span><b>40%</b></div>
+              <div><span>Venture funds / SPVs</span><b>25%</b></div>
+              <div><span>Public thematic ideas</span><b>20%</b></div>
+              <div><span>Reserve for follow-ons</span><b>15%</b></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="dealflow">
+        <div class="section-head">
+          <div><p>Track companies from first signal through investment decision.</p></div>
+          <div class="filters"><input id="dealSearch" placeholder="Search deals"><select id="stageFilter"><option value="">All stages</option><option>Watching</option><option>Intro</option><option>Diligence</option><option>IC Review</option><option>Invested</option><option>Passed</option></select></div>
+        </div>
+        <div class="panel"><div id="dealTable" class="table-wrap"></div></div>
+      </section>
+
+      <section class="view" id="ideas">
+        <div class="section-head">
+          <p>Capture companies, technologies and business concepts worth researching.</p>
+          <button class="primary" id="newIdeaBtn">+ Add idea</button>
+        </div>
+        <div id="ideaGrid" class="idea-grid"></div>
+      </section>
+
+      <section class="view" id="markets">
+        <div class="section-head"><p>Live market context from TradingView. Quotes may be delayed.</p></div>
+        <div class="panel market-panel">
+          <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {
+              "colorTheme": "dark",
+              "dateRange": "12M",
+              "showChart": true,
+              "locale": "en",
+              "width": "100%",
+              "height": "620",
+              "largeChartUrl": "",
+              "isTransparent": true,
+              "showSymbolLogo": true,
+              "showFloatingTooltip": false,
+              "tabs": [
+                {"title":"Market","symbols":[
+                  {"s":"SP:SPX","d":"S&P 500"},
+                  {"s":"NASDAQ:NDX","d":"Nasdaq 100"},
+                  {"s":"TVC:VIX","d":"VIX"},
+                  {"s":"TVC:US10Y","d":"US 10Y"}
+                ]},
+                {"title":"Technology","symbols":[
+                  {"s":"NASDAQ:NVDA","d":"NVIDIA"},
+                  {"s":"NASDAQ:MSFT","d":"Microsoft"},
+                  {"s":"NASDAQ:GOOGL","d":"Alphabet"},
+                  {"s":"NASDAQ:AMZN","d":"Amazon"},
+                  {"s":"NASDAQ:TSLA","d":"Tesla"}
+                ]},
+                {"title":"Health & Space","symbols":[
+                  {"s":"NASDAQ:CRSP","d":"CRISPR Therapeutics"},
+                  {"s":"NASDAQ:RXRX","d":"Recursion"},
+                  {"s":"NASDAQ:RKLB","d":"Rocket Lab"},
+                  {"s":"NASDAQ:ASTS","d":"AST SpaceMobile"}
+                ]}
+              ]
+            }
+            </script>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="news">
+        <div class="section-head"><p>Fresh headlines from curated Google News RSS searches, refreshed in the browser.</p><button class="ghost" id="refreshNews">Refresh</button></div>
+        <div class="news-tabs" id="newsTabs">
+          <button class="active" data-query="artificial intelligence startup funding">AI</button>
+          <button data-query="longevity biotechnology startup">Longevity</button>
+          <button data-query="healthcare technology funding">Health Tech</button>
+          <button data-query="space technology startup defense">Space & Defense</button>
+        </div>
+        <div id="newsStatus" class="status-note">Loading news…</div>
+        <div id="newsGrid" class="news-grid"></div>
+      </section>
+
+      <section class="view" id="xfeeds">
+        <div class="section-head"><p>Live public X timelines. X may require sign-in or block embeds depending on browser privacy settings.</p></div>
+        <div class="x-grid">
+          <article class="panel"><div class="card-title"><h3>AI leaders</h3><a href="https://x.com/search?q=(AI%20OR%20agents)%20min_faves%3A100&src=typed_query&f=live" target="_blank">Open live search</a></div><a class="twitter-timeline" data-theme="dark" data-height="620" href="https://twitter.com/OpenAI?ref_src=twsrc%5Etfw">Posts by OpenAI</a></article>
+          <article class="panel"><div class="card-title"><h3>Longevity</h3><a href="https://x.com/search?q=(longevity%20OR%20aging%20OR%20senolytics)%20min_faves%3A25&src=typed_query&f=live" target="_blank">Open live search</a></div><a class="twitter-timeline" data-theme="dark" data-height="620" href="https://twitter.com/agingdoc1?ref_src=twsrc%5Etfw">Posts by agingdoc1</a></article>
+          <article class="panel"><div class="card-title"><h3>Venture & startups</h3><a href="https://x.com/search?q=(startup%20funding%20OR%20seed%20round)%20min_faves%3A50&src=typed_query&f=live" target="_blank">Open live search</a></div><a class="twitter-timeline" data-theme="dark" data-height="620" href="https://twitter.com/ycombinator?ref_src=twsrc%5Etfw">Posts by Y Combinator</a></article>
+        </div>
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+      </section>
+
+      <section class="view" id="calendar">
+        <div class="section-head"><p>Research, product, regulatory and market events that could change an investment thesis.</p></div>
+        <div id="catalystGrid" class="timeline"></div>
+      </section>
+
+      <section class="view" id="network">
+        <div class="section-head"><p>Build a compounding network of founders, scientists, operators and investors.</p><button class="primary" id="newContactBtn">+ Add contact</button></div>
+        <div class="panel"><div id="contactTable" class="table-wrap"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="modal">
+    <form method="dialog" id="modalForm">
+      <div class="modal-head"><div><span class="eyebrow" id="modalEyebrow">New</span><h2 id="modalTitle">Add opportunity</h2></div><button class="icon-btn" value="cancel">×</button></div>
+      <div id="modalFields" class="form-grid"></div>
+      <div class="modal-actions"><button class="ghost" value="cancel">Cancel</button><button class="primary" id="saveModal" value="default">Save</button></div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
