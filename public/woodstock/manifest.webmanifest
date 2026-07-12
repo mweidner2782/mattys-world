@@ -27,14 +27,19 @@
   ],
   "shortcuts": [
     {
+      "name": "Home schedule",
+      "short_name": "Schedule",
+      "url": "/woodstock/schedule.html"
+    },
+    {
       "name": "Who to call",
       "short_name": "Call",
       "url": "/woodstock/#call"
     },
     {
-      "name": "Maintenance tasks",
-      "short_name": "Tasks",
-      "url": "/woodstock/#maintenance"
+      "name": "House systems",
+      "short_name": "Systems",
+      "url": "/woodstock/#systems"
     }
   ],
   "prefer_related_applications": false
