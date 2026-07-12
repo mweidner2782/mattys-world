@@ -29,7 +29,7 @@
             <div class="field"><label for="date">Day</label><input id="date" type="date" required></div>
             <div class="field"><label for="time">Time</label><input id="time" type="time" required></div>
             <div class="field"><label for="recurrence">Repeat</label><select id="recurrence"><option value="none">One time</option><option value="daily">Every day</option><option value="weekly">Every week</option><option value="monthly">Every month</option><option value="yearly">Every year</option></select></div>
-            <div class="field"><label for="owner">For</label><select id="owner"><option value="Matt">Matt</option><option value="Sara">Sara</option><option value="Both">Matt & Sara</option></select></div>
+            <div class="field"><label for="owner">Responsible person</label><select id="owner"><option value="Matt">Matt</option><option value="Sara">Sara</option><option value="Both">Matt & Sara</option></select></div>
           </div>
           <div class="form-actions"><button class="btn" type="submit" id="save-task">Schedule reminder</button><button class="btn secondary hidden" type="button" id="cancel-edit">Cancel edit</button></div>
         </form>
@@ -38,7 +38,7 @@
       <aside class="card"><h3>Suggested house reminders</h3><div class="notice">Tap a suggestion, then adjust its next date and time before saving.</div><div class="suggestions" id="suggestions"></div></aside>
     </div></div></section>
 
-    <section class="section" id="upcoming"><div class="shell"><div class="section-head"><div><h2>Upcoming</h2><p class="sub">Reminders are saved on this device. Use Done, Snooze, Edit, or Delete at any time.</p></div><div class="filters"><button class="filter active" data-filter="upcoming">Upcoming</button><button class="filter" data-filter="all">All</button><button class="filter" data-filter="completed">Completed</button></div></div><div class="task-list" id="task-list"></div></div></section>
+    <section class="section" id="upcoming"><div class="shell"><div class="section-head"><div><h2>Upcoming</h2><p class="sub">Reminders are saved on this device, and alerts are sent to this device. Use Done, Snooze, Edit, or Delete at any time.</p></div><div class="filters"><button class="filter active" data-filter="upcoming">Upcoming</button><button class="filter" data-filter="all">All</button><button class="filter" data-filter="completed">Completed</button></div></div><div class="task-list" id="task-list"></div></div></section>
   </main>
 
   <div class="mobile-nav"><a href="/woodstock/">⌂ Guide</a><a href="#new-reminder">＋ Add</a><a href="#upcoming">✓ Schedule</a></div>
