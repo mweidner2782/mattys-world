@@ -1,9 +1,18 @@
 {
   "name": "mattys-world",
-  "version": "1.0.0",
-  "description": "Mattys World — Your personal information organizer",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mattys World and the Woodstock Home operating app",
   "scripts": {
-    "start": "npx serve public",
-    "dev": "npx serve public"
+    "dev": "nitro dev",
+    "build": "nitro build",
+    "start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "luxon": "^3.7.2",
+    "nitro": "latest",
+    "web-push": "^3.6.7",
+    "workflow": "latest"
   }
 }
