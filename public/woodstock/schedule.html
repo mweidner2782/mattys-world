@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#24362c">
+  <meta name="description" content="Home schedule and reminder alerts for Woodstock Home.">
+  <title>Home Schedule · Woodstock Home</title>
+  <link rel="manifest" href="/woodstock/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/woodstock/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/woodstock/icons/icon-192.png">
+  <link rel="stylesheet" href="/woodstock/schedule.css">
+</head>
+<body>
+  <header class="topbar"><div class="shell topbar-in"><a class="brand" href="/woodstock/"><span class="mark">W</span>Woodstock Home</a><a class="back" href="/woodstock/">← Back to house guide</a></div></header>
+
+  <main>
+    <section class="hero"><div class="shell"><div class="hero-card"><div><div class="status"><span class="dot" id="push-dot"></span><span id="push-status">Notifications not enabled</span></div><h1>Home schedule</h1><p>Choose the exact day and time for anything that needs attention around the house. Woodstock Home will send a push alert to this device when it is due.</p><div class="hero-actions"><button class="btn ghost" id="enable-push">Enable push notifications</button><button class="btn" id="test-push">Send a 10-second test</button></div></div></div></div></section>
+
+    <section class="section"><div class="shell"><div class="grid summary"><div class="summary-card"><strong id="today-count">0</strong><span>Due today</span></div><div class="summary-card"><strong id="week-count">0</strong><span>Due in 7 days</span></div><div class="summary-card"><strong id="recurring-count">0</strong><span>Recurring reminders</span></div></div></div></section>
+
+    <section class="section" id="new-reminder"><div class="shell"><div class="grid layout">
+      <article class="card"><h3 id="form-title">Schedule a house task</h3><div id="form-notice" class="notice hidden"></div>
+        <form id="task-form">
+          <input type="hidden" id="editing-id">
+          <div class="form-grid">
+            <div class="field full"><label for="title">What needs to be done?</label><input id="title" required maxlength="160" placeholder="Example: Roll garbage bins to the road"></div>
+            <div class="field full"><label for="notes">Notes</label><textarea id="notes" maxlength="500" placeholder="Add instructions, a vendor name, or anything useful"></textarea></div>
+            <div class="field"><label for="date">Day</label><input id="date" type="date" required></div>
+            <div class="field"><label for="time">Time</label><input id="time" type="time" required></div>
+            <div class="field"><label for="recurrence">Repeat</label><select id="recurrence"><option value="none">One time</option><option value="daily">Every day</option><option value="weekly">Every week</option><option value="monthly">Every month</option><option value="yearly">Every year</option></select></div>
+            <div class="field"><label for="owner">For</label><select id="owner"><option value="Matt">Matt</option><option value="Sara">Sara</option><option value="Both">Matt & Sara</option></select></div>
+          </div>
+          <div class="form-actions"><button class="btn" type="submit" id="save-task">Schedule reminder</button><button class="btn secondary hidden" type="button" id="cancel-edit">Cancel edit</button></div>
+        </form>
+      </article>
+
+      <aside class="card"><h3>Suggested house reminders</h3><div class="notice">Tap a suggestion, then adjust its next date and time before saving.</div><div class="suggestions" id="suggestions"></div></aside>
+    </div></div></section>
+
+    <section class="section" id="upcoming"><div class="shell"><div class="section-head"><div><h2>Upcoming</h2><p class="sub">Reminders are saved on this device. Use Done, Snooze, Edit, or Delete at any time.</p></div><div class="filters"><button class="filter active" data-filter="upcoming">Upcoming</button><button class="filter" data-filter="all">All</button><button class="filter" data-filter="completed">Completed</button></div></div><div class="task-list" id="task-list"></div></div></section>
+  </main>
+
+  <div class="mobile-nav"><a href="/woodstock/">⌂ Guide</a><a href="#new-reminder">＋ Add</a><a href="#upcoming">✓ Schedule</a></div>
+  <div class="modal" id="pin-modal"><div class="modal-card"><h2>Household access</h2><p class="sub">Enter the Woodstock Home household PIN once on this device to schedule push alerts.</p><div class="pin-row"><input id="pin-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit PIN"><button class="btn" id="save-pin">Continue</button></div><div id="pin-error" class="notice error hidden" style="margin-top:12px"></div></div></div>
+  <div class="toast" id="toast"></div>
+  <footer><div class="shell"><strong>Woodstock Home Schedule</strong><br>All alert times use this device’s local time zone. Push permission must remain enabled in the phone’s notification settings.</div></footer>
+
+  <script src="/woodstock/schedule.js" defer></script>
+</body>
+</html>
