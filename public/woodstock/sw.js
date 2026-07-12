@@ -1,4 +1,4 @@
-const CACHE_NAME = 'woodstock-home-v4';
+const CACHE_NAME = 'woodstock-home-v5';
 const APP_SHELL = [
   '/woodstock/',
   '/woodstock/index.html',
@@ -31,7 +31,7 @@ function enhanceHomePage(html) {
   const scheduleLink = "<a href='/woodstock/schedule.html'>Schedule</a>";
   html = html.replace('<nav>', '<nav>' + scheduleLink);
   html = html.replace("<div class='mobile'>", "<div class='mobile'><a href='/woodstock/schedule.html'>🗓 Schedule</a>");
-  const floating = "<a href='/woodstock/schedule.html' class='woodstock-schedule-fab' aria-label='Open home schedule'>🗓 <span>Home schedule</span></a><style>.woodstock-schedule-fab{position:fixed;right:18px;bottom:18px;z-index:58;display:flex;align-items:center;gap:8px;padding:13px 16px;border-radius:999px;background:#aa654d;color:#fff;text-decoration:none;font-weight:850;box-shadow:0 12px 35px rgba(31,39,34,.25)}@media(max-width:650px){.woodstock-schedule-fab{right:14px;bottom:78px}.woodstock-schedule-fab span{display:none}}</style>";
+  const floating = "<a href='/woodstock/schedule.html' class='woodstock-schedule-fab' aria-label='Open home schedule'>🗓 <span>Home schedule</span></a><style>.woodstock-schedule-fab{position:fixed;right:18px;bottom:18px;z-index:58;display:flex;align-items:center;gap:8px;padding:13px 16px;border-radius:999px;background:#aa654d;color:#fff;text-decoration:none;font-weight:850;box-shadow:0 12px 35px rgba(31,39,34,.25)}@media(max-width:650px){.mobile{grid-template-columns:repeat(4,1fr)!important}.woodstock-schedule-fab{right:14px;bottom:78px}.woodstock-schedule-fab span{display:none}}</style>";
   return html.replace('</body>', floating + '</body>');
 }
 
