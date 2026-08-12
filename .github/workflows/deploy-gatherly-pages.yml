@@ -37,6 +37,14 @@ jobs:
           cp -R gatherly/. _site/
           mkdir -p _site/bidpathway
           cp -R bidpathway/. _site/bidpathway/
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('_site/index.html')
+          s = p.read_text()
+          redirect = "<script>if(['bidpathway.com','www.bidpathway.com'].includes(location.hostname)){location.replace('/bidpathway/');}</script>"
+          s = s.replace('<head>', '<head>' + redirect, 1)
+          p.write_text(s)
+          PY
 
       - name: Upload Pages site
         uses: actions/upload-pages-artifact@v3
