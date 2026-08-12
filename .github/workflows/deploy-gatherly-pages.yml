@@ -39,10 +39,30 @@ jobs:
           cp -R bidpathway/. _site/bidpathway/
           python - <<'PY'
           from pathlib import Path
-          p = Path('_site/index.html')
-          s = p.read_text()
+
+          # Keep Gatherly at the GitHub Pages root, but route the BidPathway custom domain
+          # directly into the BidPathway landing page.
+          root = Path('_site/index.html')
+          s = root.read_text()
           redirect = "<script>if(['bidpathway.com','www.bidpathway.com'].includes(location.hostname)){location.replace('/bidpathway/');}</script>"
-          s = s.replace('<head>', '<head>' + redirect, 1)
+          if redirect not in s:
+              s = s.replace('<head>', '<head>' + redirect, 1)
+          root.write_text(s)
+
+          # Install the Google Ads account tag on the BidPathway landing page.
+          p = Path('_site/bidpathway/index.html')
+          s = p.read_text()
+          google_tag = '''<!-- Google tag (gtag.js) -->
+          <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18386204983"></script>
+          <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18386204983');
+          </script>
+          '''
+          if 'AW-18386204983' not in s:
+              s = s.replace('<head>', '<head>\n' + google_tag, 1)
           p.write_text(s)
           PY
 
