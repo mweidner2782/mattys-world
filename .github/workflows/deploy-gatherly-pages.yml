@@ -1,10 +1,11 @@
-name: Deploy Gatherly to GitHub Pages
+name: Deploy Gatherly and BidPathway to GitHub Pages
 
 on:
   push:
     branches: ["main"]
     paths:
       - "gatherly/**"
+      - "bidpathway/**"
       - ".github/workflows/deploy-gatherly-pages.yml"
   workflow_dispatch:
 
@@ -26,12 +27,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
-      - name: Upload Gatherly site
+
+      - name: Build Pages artifact
+        run: |
+          mkdir -p _site
+          cp -R gatherly/. _site/
+          mkdir -p _site/bidpathway
+          cp -R bidpathway/. _site/bidpathway/
+
+      - name: Upload Pages site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: gatherly
+          path: _site
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
